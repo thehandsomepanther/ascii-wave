@@ -8,7 +8,7 @@ const WAVE_OFFSET_FROM_BOTTOM = 30;
 
 const NUM_WAVES = 6;
 const NUM_BACKGROUND_WAVES = 7;
-const BACKGROUND_WAVE_MAX_HEIGHT = 6;
+const BACKGROUND_WAVE_MAX_HEIGHT = 5;
 const BACKGROUND_WAVE_COMPRESSION = 0.1;
 
 const WAVE_CHARACTERS = '^`\'~*-,._';
@@ -78,7 +78,7 @@ class App extends Component {
           // This represents a point on the wave
           let newPoint = {
               x: n,
-              y: WAVE_OFFSET_FROM_BOTTOM,
+              y: WAVE_OFFSET_FROM_BOTTOM - i * 2,
               spd: {
                 y:0
               }, // speed with vertical component zero
