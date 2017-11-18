@@ -22,6 +22,7 @@ class App extends Component {
     this.state = {
       dimensions: null,
       tick: 0,
+      isParamsShown: true,
       yOffset: 60,
       numWaves: 10,
       numBackgroundWaves: 7,
@@ -154,11 +155,19 @@ class App extends Component {
     });
   }
 
+  handleArrowClick = () => {
+    const { isParamsShown } = this.state;
+    this.setState({
+      isParamsShown: !isParamsShown
+    });
+  }
+
   render() {
     const { 
       dimensions,
       pointListList, 
       tick, 
+      isParamsShown,
       yOffset,
       numWaves,
       numBackgroundWaves,
@@ -216,81 +225,81 @@ class App extends Component {
     }
 
     return (
-      <div>
-        <div>
-          <div>
-            <label>yOffset</label>
-            <input
-              type="text"
-              value={ yOffset }
-              onChange={ e => this.handleChange('yOffset', e.target.value) }
-            />
+      <div className="container">
+        { isParamsShown ?
+          <div className="input-container">
+            <div>
+              <p className="input-title">Parameters</p>
+              <p className="input-arrow" onClick={ this.handleArrowClick }>↜</p>
+            </div>
+            <div className="input-group">
+              <label className="input-label">yOffset</label>
+              <input
+                type="text"
+                value={ yOffset }
+                onChange={ e => this.handleChange('yOffset', e.target.value) }
+              />
+            </div>
+            <div className="input-group">
+              <label className="input-label">numWaves</label>
+              <input
+                type="text"
+                value={ numWaves }
+                onChange={ e => this.handleChange('numWaves', e.target.value) }
+              />
+            </div>
+            <div className="input-group">
+              <label className="input-label">numBackgroundWaves</label>
+              <input
+                type="text"
+                value={ numBackgroundWaves }
+                onChange={ e => this.handleChange('numBackgroundWaves', e.target.value) }
+              />
+            </div>
+            <div className="input-group">
+              <label className="input-label">backgroundWaveMaxHeight</label>
+              <input
+                type="text"
+                value={ backgroundWaveMaxHeight }
+                onChange={ e => this.handleChange('backgroundWaveMaxHeight', e.target.value) }
+              />
+            </div>
+            <div className="input-group">
+              <label className="input-label">backgroundWaveCompression</label>
+              <input
+                type="text"
+                value={ backgroundWaveCompression }
+                onChange={ e => this.handleChange('backgroundWaveCompression', e.target.value) }
+              />
+            </div>
+            <div className="input-group">
+              <label className="input-label">waveCharacters</label>
+              <input
+                type="text"
+                value={ waveCharacters }
+                onChange={ e => this.handleChange('waveCharacters', e.target.value) }
+              />
+            </div>
+            <div className="input-group">
+              <label className="input-label">frontWaveHex</label>
+              <input
+                type="text"
+                value={ frontWaveHex }
+                onChange={ e => this.handleChange('frontWaveHex', e.target.value) }
+              />
+            </div>
+            <div className="input-group">
+              <label className="input-label">backWaveHex</label>
+              <input
+                type="text"
+                value={ backWaveHex }
+                onChange={ e => this.handleChange('backWaveHex', e.target.value) }
+              />
+            </div>
           </div>
-          
-          <div>
-            <label>numWaves</label>
-            <input
-              type="text"
-              value={ numWaves }
-              onChange={ e => this.handleChange('numWaves', e.target.value) }
-            />
-          </div>
-          
-          <div>
-            <label>numBackgroundWaves</label>
-            <input
-              type="text"
-              value={ numBackgroundWaves }
-              onChange={ e => this.handleChange('numBackgroundWaves', e.target.value) }
-            />
-          </div>
-          
-          <div>
-            <label>backgroundWaveMaxHeight</label>
-            <input
-              type="text"
-              value={ backgroundWaveMaxHeight }
-              onChange={ e => this.handleChange('backgroundWaveMaxHeight', e.target.value) }
-            />
-          </div>
-          
-          <div>
-            <label>backgroundWaveCompression</label>
-            <input
-              type="text"
-              value={ backgroundWaveCompression }
-              onChange={ e => this.handleChange('backgroundWaveCompression', e.target.value) }
-            />
-          </div>
-          
-          <div>
-            <label>waveCharacters</label>
-            <input
-              type="text"
-              value={ waveCharacters }
-              onChange={ e => this.handleChange('waveCharacters', e.target.value) }
-            />
-          </div>
-          
-          <div>
-            <label>frontWaveHex</label>
-            <input
-              type="text"
-              value={ frontWaveHex }
-              onChange={ e => this.handleChange('frontWaveHex', e.target.value) }
-            />
-          </div>
-          
-          <div>
-            <label>backWaveHex</label>
-            <input
-              type="text"
-              value={ backWaveHex }
-              onChange={ e => this.handleChange('backWaveHex', e.target.value) }
-            />
-          </div>
-          
-        </div>
+          :
+          <p className="input-arrow params-hidden" onClick={ this.handleArrowClick }>↝</p>
+        }
         <div
           style={{
             height: '100vh',
