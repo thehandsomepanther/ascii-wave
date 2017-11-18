@@ -1,19 +1,20 @@
 import React, { Component } from 'react';
 import './App.css';
 
+// taken from https://gist.github.com/rosszurowski/67f04465c424a9bc0dae
+function lerpColor(a, b, amount) {   
+    let ah = parseInt(a.replace(/#/g, ''), 16),
+      ar = ah >> 16, ag = ah >> 8 & 0xff, ab = ah & 0xff,
+      bh = parseInt(b.replace(/#/g, ''), 16),
+      br = bh >> 16, bg = bh >> 8 & 0xff, bb = bh & 0xff,
+      rr = ar + amount * (br - ar),
+      rg = ag + amount * (bg - ag),
+      rb = ab + amount * (bb - ab);
+  
+    return '#' + ((1 << 24) + (rr << 16) + (rg << 8) + rb | 0).toString(16).slice(1);
+}
+
 // mostly borrowed from http://jsfiddle.net/phil_mcc/sXmpD/8/#run
-
-const LETTER_WIDTH = 7;
-const LETTER_HEIGHT = 12;
-const TICK_TIME_MS = 16;
-const WAVE_OFFSET_FROM_BOTTOM = 30;
-
-const NUM_WAVES = 6;
-const NUM_BACKGROUND_WAVES = 7;
-const BACKGROUND_WAVE_MAX_HEIGHT = 5;
-const BACKGROUND_WAVE_COMPRESSION = 0.1;
-
-const WAVE_CHARACTERS = '^`\'~*-,._';
 
 class App extends Component {
   constructor(props) {
@@ -21,20 +22,34 @@ class App extends Component {
     this.state = {
       dimensions: null,
       tick: 0
-    }
-    this.waves = [];
+    };
 
-    for (let n = 0; n < NUM_WAVES; ++n) {
+    this.LETTER_WIDTH = 7;
+    this.LETTER_HEIGHT = 12;
+    this.TICK_TIME_MS = 16;
+    this.WAVE_OFFSET_FROM_TOP = 70;
+    
+    this.NUM_WAVES = 10;
+    this.NUM_BACKGROUND_WAVES = 7;
+    this.BACKGROUND_WAVE_MAX_HEIGHT = 10;
+    this.BACKGROUND_WAVE_COMPRESSION = 0.1;
+
+    this.WAVE_CHARACTERS = '^`\'~*-,._';
+    this.FRONT_WAVE_HEX = '#0033cc';
+    this.BACK_WAVE_HEX = '#fafbfc';
+
+    this.waves = [];
+    for (let n = 0; n < this.NUM_WAVES; ++n) {
       const sineOffsets = [];
       const sineAmplitudes = [];
       const sineStretches = [];
       const offsetStretches = [];
       
-      for (let i = 0; i < NUM_BACKGROUND_WAVES; ++i) {
+      for (let i = 0; i < this.NUM_BACKGROUND_WAVES; ++i) {
         sineOffsets.push(-Math.PI + 2 * Math.PI * Math.random());
-        sineAmplitudes.push(Math.random() * BACKGROUND_WAVE_MAX_HEIGHT);
-        sineStretches.push(Math.random() * BACKGROUND_WAVE_COMPRESSION);
-        offsetStretches.push(Math.random() * BACKGROUND_WAVE_COMPRESSION);
+        sineAmplitudes.push(Math.random() * this.BACKGROUND_WAVE_MAX_HEIGHT);
+        sineStretches.push(Math.random() * this.BACKGROUND_WAVE_COMPRESSION);
+        offsetStretches.push(Math.random() * this.BACKGROUND_WAVE_COMPRESSION);
       }
 
       this.waves.push({
@@ -50,16 +65,16 @@ class App extends Component {
     const canvasElement = document.querySelector('#canvas');
     const canvasRect = canvasElement.getBoundingClientRect();
     const dimensions = {
-      width: Math.floor(canvasRect.width / LETTER_WIDTH),
-      height: Math.floor(canvasRect.height / LETTER_HEIGHT),
+      width: Math.floor(canvasRect.width / this.LETTER_WIDTH),
+      height: Math.floor(canvasRect.height / this.LETTER_HEIGHT),
       widthPx: canvasRect.width,
       heightPx: canvasRect.height
     };
     this.setState({
       dimensions,
-      pointListList: this.makeWavePoints(dimensions.width, NUM_WAVES)
+      pointListList: this.makeWavePoints(dimensions.width, this.NUM_WAVES)
     });
-    this.interval = setInterval(this.tick, TICK_TIME_MS);
+    this.interval = setInterval(this.tick, this.TICK_TIME_MS);
   }
 
   componentWillUnmount() {
@@ -76,7 +91,7 @@ class App extends Component {
           // This represents a point on the wave
           let newPoint = {
               x: n,
-              y: WAVE_OFFSET_FROM_BOTTOM - i * 2,
+              y: this.WAVE_OFFSET_FROM_TOP - 5 * 2,
               spd: {
                 y:0
               }, // speed with vertical component zero
@@ -93,7 +108,7 @@ class App extends Component {
   overlapSines = (col, wave) => {
     const { tick } = this.state;
     let result = 0;
-    for (let i = 0; i < NUM_BACKGROUND_WAVES; ++i) {
+    for (let i = 0; i < this.NUM_BACKGROUND_WAVES; ++i) {
         result = result
             + this.waves[wave].sineOffsets[i]
             + this.waves[wave].sineAmplitudes[i] 
@@ -127,19 +142,33 @@ class App extends Component {
       for (let i = 0; i < pointListList.length; ++i) {
         const pointList = pointListList[i];
 
-        for (let point of pointList) {
+        for (let j = 0; j < pointList.length; j++) {
+          const point = pointList[j];
           const col = point.x;
           const y = point.y + this.overlapSines(col, i);
           const row = Math.floor(y);
-  
-          const charIndex = Math.floor(Math.floor(y*10 % 10) / 10 * WAVE_CHARACTERS.length);
-          if (mins[col] === undefined) {
+          if (row >= mins[col]) {
+            continue;
+          } else if (mins[col] === undefined) {
             mins.push(row);
-            grid[row].props.children[col] = <span className="cell" key={ col }>{ WAVE_CHARACTERS[charIndex] }</span>;
-          } else if (row < mins[col]) {
+          } else {
             mins[col] = row;
-            grid[row].props.children[col] = <span className="cell" key={ col }>{ WAVE_CHARACTERS[charIndex] }</span>;
           }
+
+          if (grid[row] === undefined || grid[row].props.children[col] === undefined) {
+            continue;
+          }
+          
+          const charIndex = Math.floor(Math.floor(y*10 % 10) / 10 * this.WAVE_CHARACTERS.length);
+          grid[row].props.children[col] = (
+            <span 
+              className="cell" 
+              style={{ color: lerpColor(this.FRONT_WAVE_HEX, this.BACK_WAVE_HEX, i/pointListList.length) }}
+              key={ col }
+            >
+              { this.WAVE_CHARACTERS[charIndex] }
+            </span>
+          );
         }
       }
     }
