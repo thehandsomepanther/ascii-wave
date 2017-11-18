@@ -30,7 +30,8 @@ class App extends Component {
       backgroundWaveCompression: 0.1,
       waveCharacters: '^`\'~*-,._',
       frontWaveHex: '#0033cc',
-      backWaveHex: '#fafbfc'
+      backWaveHex: '#fafbfc',
+      tickInterval: 16
     };
 
     this.LETTER_WIDTH = 7;
@@ -48,7 +49,8 @@ class App extends Component {
       numWaves,
       numBackgroundWaves,
       backgroundWaveCompression,
-      backgroundWaveMaxHeight
+      backgroundWaveMaxHeight,
+      tickInterval
     } = this.state;
 
     if (
@@ -56,18 +58,23 @@ class App extends Component {
       numWaves !== prevState.numWaves||
       numBackgroundWaves !== prevState.numBackgroundWaves||
       backgroundWaveCompression !== prevState.backgroundWaveCompression||
-      backgroundWaveMaxHeight !== prevState.backgroundWaveMaxHeight
+      backgroundWaveMaxHeight !== prevState.backgroundWaveMaxHeight ||
+      tickInterval !== prevState.tickInterval
     ) {
       this.init();
     }
   }
 
-  componentWillUnmount() {
-    clearInterval(this.interval);
-  }
-
   init = () => {
-    const { numWaves, numBackgroundWaves, backgroundWaveMaxHeight, backgroundWaveCompression } = this.state;
+    const { 
+      numWaves, 
+      numBackgroundWaves, 
+      backgroundWaveMaxHeight, 
+      backgroundWaveCompression, 
+      tickInterval, 
+      interval 
+    } = this.state;
+    clearInterval(interval);
     const canvasElement = document.querySelector('#canvas');
     const canvasRect = canvasElement.getBoundingClientRect();
     const dimensions = {
@@ -101,9 +108,10 @@ class App extends Component {
 
     this.setState({
       dimensions,
-      pointListList: this.makeWavePoints(dimensions.width, numWaves)
+      yOffset: dimensions.height,
+      pointListList: this.makeWavePoints(dimensions.width, numWaves),
+      interval: setInterval(this.tick, tickInterval)
     });
-    this.interval = setInterval(this.tick, this.TICK_TIME_MS);
   }
 
   makeWavePoints = (numPoints, numWaves) => {
@@ -176,6 +184,7 @@ class App extends Component {
       waveCharacters,
       frontWaveHex,
       backWaveHex,
+      tickInterval
     } = this.state;
 
     let grid = null;
@@ -294,6 +303,14 @@ class App extends Component {
                 type="text"
                 value={ backWaveHex }
                 onChange={ e => this.handleChange('backWaveHex', e.target.value) }
+              />
+            </div>
+            <div className="input-group">
+              <label className="input-label">tickInterval</label>
+              <input
+                type="text"
+                value={ tickInterval }
+                onChange={ e => this.handleChange('tickInterval', e.target.value) }
               />
             </div>
           </div>
