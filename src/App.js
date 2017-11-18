@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import './App.css';
 
+// mostly borrowed from http://jsfiddle.net/phil_mcc/sXmpD/8/#run
+
 const LETTER_WIDTH = 7;
 const LETTER_HEIGHT = 12;
 const TICK_TIME_MS = 16;
@@ -21,10 +23,6 @@ class App extends Component {
       tick: 0
     }
     this.waves = [];
-    this.sineOffsets = [];
-    this.sineAmplitudes = [];
-    this.sineStretches = [];
-    this.offsetStretches = [];
 
     for (let n = 0; n < NUM_WAVES; ++n) {
       const sineOffsets = [];
