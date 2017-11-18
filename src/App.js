@@ -24,8 +24,7 @@ class App extends Component {
     super(props);
     this.state = {
       dimenstions: null,
-      tick: 0,
-      mouseCol: null
+      tick: 0
     }
     this.sineOffsets = [];
     this.sineAmplitudes = [];
@@ -58,20 +57,6 @@ class App extends Component {
 
   componentWillUnmount() {
     clearInterval(this.interval);
-  }
-
-  handleMouseOver = e => {
-    const { dimensions } = this.state;
-    let mouseCol = Math.floor((e.screenX / dimensions.widthPx) * dimensions.width);
-    this.setState({ mouseCol });
-  }
-
-  handleMouseLeave = e => {
-    this.setState({ mouseCol: null });
-  }
-
-  handleMouseClick = e => {
-    
   }
 
   makeWavePoints = numPoints => {
@@ -112,7 +97,7 @@ class App extends Component {
   }
 
   render() {
-    const { dimensions, points, tick, mouseCol } = this.state;
+    const { dimensions, points, tick } = this.state;
 
     let grid = null;
     if (dimensions) {
@@ -120,8 +105,7 @@ class App extends Component {
       for (let row = 0; row < dimensions.height; row++) {
         let cells = [];
         for (let col = 0; col < dimensions.width; col++) {
-          const isMouseCol = mouseCol !== null && col === mouseCol;
-          cells.push(<span className={`cell ${ isMouseCol ? 'mouseline' : '' }`} key={ col }>{ isMouseCol ? '|' : ' ' }</span>);
+          cells.push(<span className="cell" key={ col }></span>);
         }
         grid.push(<div className="row" key={ row }>{ cells }</div>);
       }
@@ -143,9 +127,6 @@ class App extends Component {
           width: '100vw',
         }}
         id="canvas"
-        onMouseOver={ this.handleMouseOver }
-        onMouseLeave={ this.handleMouseLeave }
-        handleMouseClick={ this.handleMouseClick }
       >
         { grid }
       </div>
