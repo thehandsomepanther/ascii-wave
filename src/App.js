@@ -5,7 +5,7 @@ const FONT_SIZE = '12px';
 const LETTER_WIDTH = 7;
 const LETTER_HEIGHT = 12;
 const LINE_HEIGHT = '12px';
-const TICK_TIME_MS = 100;
+const TICK_TIME_MS = 16;
 const WAVE_OFFSET_FROM_BOTTOM = 30;
 
 const SPRING_CONSTANT = 0.005;
@@ -24,7 +24,8 @@ class App extends Component {
     super(props);
     this.state = {
       dimenstions: null,
-      tick: 0
+      tick: 0,
+      mouseCol: null
     }
     this.sineOffsets = [];
     this.sineAmplitudes = [];
@@ -44,9 +45,11 @@ class App extends Component {
     const canvasRect = canvasElement.getBoundingClientRect();
     const dimensions = {
       width: Math.floor(canvasRect.width / LETTER_WIDTH),
-      height: Math.floor(canvasRect.height / LETTER_HEIGHT)
+      height: Math.floor(canvasRect.height / LETTER_HEIGHT),
+      widthPx: canvasRect.width,
+      heightPx: canvasRect.height
     };
-    this.setState({ 
+    this.setState({
       dimensions,
       points: this.makeWavePoints(dimensions.width)
     });
@@ -55,6 +58,20 @@ class App extends Component {
 
   componentWillUnmount() {
     clearInterval(this.interval);
+  }
+
+  handleMouseOver = e => {
+    const { dimensions } = this.state;
+    let mouseCol = Math.floor((e.screenX / dimensions.widthPx) * dimensions.width);
+    this.setState({ mouseCol });
+  }
+
+  handleMouseLeave = e => {
+    this.setState({ mouseCol: null });
+  }
+
+  handleMouseClick = e => {
+    
   }
 
   makeWavePoints = numPoints => {
@@ -95,7 +112,7 @@ class App extends Component {
   }
 
   render() {
-    const { dimensions, points, tick } = this.state;
+    const { dimensions, points, tick, mouseCol } = this.state;
 
     let grid = null;
     if (dimensions) {
@@ -103,7 +120,8 @@ class App extends Component {
       for (let row = 0; row < dimensions.height; row++) {
         let cells = [];
         for (let col = 0; col < dimensions.width; col++) {
-          cells.push(<span className="cell" key={ col }>&nbsp;</span>);
+          const isMouseCol = mouseCol !== null && col === mouseCol;
+          cells.push(<span className={`cell ${ isMouseCol ? 'mouseline' : '' }`} key={ col }>{ isMouseCol ? '|' : ' ' }</span>);
         }
         grid.push(<div className="row" key={ row }>{ cells }</div>);
       }
@@ -113,19 +131,21 @@ class App extends Component {
         const y = point.y + this.overlapSines(col);
         const row = Math.floor(y);
 
-        // const charIndex = Math.floor(parseInt(parseInt(y).toString().slice(-1)) / WAVE_CHARACTERS.length);
-        const charIndex = Math.floor(Math.floor(y*10 % 10) / WAVE_CHARACTERS.length * 10);
+        const charIndex = Math.floor(Math.floor(y*10 % 10) / 10 * WAVE_CHARACTERS.length);
         grid[row].props.children[col] = <span className="cell" key={ col }>{ WAVE_CHARACTERS[charIndex] }</span>;
       }
     }
 
     return (      
-      <div 
+      <div
         style={{
           height: '100vh',
           width: '100vw',
         }}
         id="canvas"
+        onMouseOver={ this.handleMouseOver }
+        onMouseLeave={ this.handleMouseLeave }
+        handleMouseClick={ this.handleMouseClick }
       >
         { grid }
       </div>
