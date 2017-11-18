@@ -21,35 +21,73 @@ class App extends Component {
     super(props);
     this.state = {
       dimensions: null,
-      tick: 0
+      tick: 0,
+      yOffset: 60,
+      numWaves: 10,
+      numBackgroundWaves: 7,
+      backgroundWaveMaxHeight: 10,
+      backgroundWaveCompression: 0.1,
+      waveCharacters: '^`\'~*-,._',
+      frontWaveHex: '#0033cc',
+      backWaveHex: '#fafbfc'
     };
 
     this.LETTER_WIDTH = 7;
     this.LETTER_HEIGHT = 12;
     this.TICK_TIME_MS = 16;
-    this.WAVE_OFFSET_FROM_TOP = 70;
-    
-    this.NUM_WAVES = 10;
-    this.NUM_BACKGROUND_WAVES = 7;
-    this.BACKGROUND_WAVE_MAX_HEIGHT = 10;
-    this.BACKGROUND_WAVE_COMPRESSION = 0.1;
+  }
 
-    this.WAVE_CHARACTERS = '^`\'~*-,._';
-    this.FRONT_WAVE_HEX = '#0033cc';
-    this.BACK_WAVE_HEX = '#fafbfc';
+  componentDidMount() {
+    this.init();
+  }
+
+  componentDidUpdate(prevProps, prevState) {
+    const {
+      yOffset,
+      numWaves,
+      numBackgroundWaves,
+      backgroundWaveCompression,
+      backgroundWaveMaxHeight
+    } = this.state;
+
+    if (
+      yOffset !== prevState.yOffset ||
+      numWaves !== prevState.numWaves||
+      numBackgroundWaves !== prevState.numBackgroundWaves||
+      backgroundWaveCompression !== prevState.backgroundWaveCompression||
+      backgroundWaveMaxHeight !== prevState.backgroundWaveMaxHeight
+    ) {
+      this.init();
+    }
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.interval);
+  }
+
+  init = () => {
+    const { numWaves, numBackgroundWaves, backgroundWaveMaxHeight, backgroundWaveCompression } = this.state;
+    const canvasElement = document.querySelector('#canvas');
+    const canvasRect = canvasElement.getBoundingClientRect();
+    const dimensions = {
+      width: Math.floor(canvasRect.width / this.LETTER_WIDTH),
+      height: Math.floor(canvasRect.height / this.LETTER_HEIGHT),
+      widthPx: canvasRect.width,
+      heightPx: canvasRect.height
+    };
 
     this.waves = [];
-    for (let n = 0; n < this.NUM_WAVES; ++n) {
+    for (let n = 0; n < numWaves; ++n) {
       const sineOffsets = [];
       const sineAmplitudes = [];
       const sineStretches = [];
       const offsetStretches = [];
       
-      for (let i = 0; i < this.NUM_BACKGROUND_WAVES; ++i) {
+      for (let i = 0; i < numBackgroundWaves; ++i) {
         sineOffsets.push(-Math.PI + 2 * Math.PI * Math.random());
-        sineAmplitudes.push(Math.random() * this.BACKGROUND_WAVE_MAX_HEIGHT);
-        sineStretches.push(Math.random() * this.BACKGROUND_WAVE_COMPRESSION);
-        offsetStretches.push(Math.random() * this.BACKGROUND_WAVE_COMPRESSION);
+        sineAmplitudes.push(Math.random() * backgroundWaveMaxHeight);
+        sineStretches.push(Math.random() * backgroundWaveCompression);
+        offsetStretches.push(Math.random() * backgroundWaveCompression);
       }
 
       this.waves.push({
@@ -59,30 +97,16 @@ class App extends Component {
         offsetStretches
       });
     }
-  }
 
-  componentDidMount() {
-    const canvasElement = document.querySelector('#canvas');
-    const canvasRect = canvasElement.getBoundingClientRect();
-    const dimensions = {
-      width: Math.floor(canvasRect.width / this.LETTER_WIDTH),
-      height: Math.floor(canvasRect.height / this.LETTER_HEIGHT),
-      widthPx: canvasRect.width,
-      heightPx: canvasRect.height
-    };
     this.setState({
       dimensions,
-      pointListList: this.makeWavePoints(dimensions.width, this.NUM_WAVES)
+      pointListList: this.makeWavePoints(dimensions.width, numWaves)
     });
     this.interval = setInterval(this.tick, this.TICK_TIME_MS);
   }
 
-  componentWillUnmount() {
-    clearInterval(this.interval);
-  }
-
   makeWavePoints = (numPoints, numWaves) => {
-    const { dimensions } = this.state;
+    const { dimensions, yOffset } = this.state;
     const pointListList = [];
 
     for (let i = 0; i < numWaves; i++) {
@@ -91,7 +115,7 @@ class App extends Component {
           // This represents a point on the wave
           let newPoint = {
               x: n,
-              y: this.WAVE_OFFSET_FROM_TOP - 5 * 2,
+              y: yOffset - 5 * 2,
               spd: {
                 y:0
               }, // speed with vertical component zero
@@ -106,9 +130,9 @@ class App extends Component {
   }
 
   overlapSines = (col, wave) => {
-    const { tick } = this.state;
+    const { tick, numBackgroundWaves } = this.state;
     let result = 0;
-    for (let i = 0; i < this.NUM_BACKGROUND_WAVES; ++i) {
+    for (let i = 0; i < numBackgroundWaves; ++i) {
         result = result
             + this.waves[wave].sineOffsets[i]
             + this.waves[wave].sineAmplitudes[i] 
@@ -124,8 +148,26 @@ class App extends Component {
     });
   }
 
+  handleChange = (attrib, val) => {
+    this.setState({
+      [attrib]: val
+    });
+  }
+
   render() {
-    const { dimensions, pointListList, tick } = this.state;
+    const { 
+      dimensions,
+      pointListList, 
+      tick, 
+      yOffset,
+      numWaves,
+      numBackgroundWaves,
+      backgroundWaveMaxHeight,
+      backgroundWaveCompression,
+      waveCharacters,
+      frontWaveHex,
+      backWaveHex,
+    } = this.state;
 
     let grid = null;
     if (dimensions) {
@@ -159,29 +201,105 @@ class App extends Component {
             continue;
           }
           
-          const charIndex = Math.floor(Math.floor(y*10 % 10) / 10 * this.WAVE_CHARACTERS.length);
+          const charIndex = Math.floor(Math.floor(y*10 % 10) / 10 * waveCharacters.length);
           grid[row].props.children[col] = (
             <span 
               className="cell" 
-              style={{ color: lerpColor(this.FRONT_WAVE_HEX, this.BACK_WAVE_HEX, i/pointListList.length) }}
+              style={{ color: lerpColor(frontWaveHex, backWaveHex, i/pointListList.length) }}
               key={ col }
             >
-              { this.WAVE_CHARACTERS[charIndex] }
+              { waveCharacters[charIndex] }
             </span>
           );
         }
       }
     }
 
-    return (      
-      <div
-        style={{
-          height: '100vh',
-          width: '100vw',
-        }}
-        id="canvas"
-      >
-        { grid }
+    return (
+      <div>
+        <div>
+          <div>
+            <label>yOffset</label>
+            <input
+              type="text"
+              value={ yOffset }
+              onChange={ e => this.handleChange('yOffset', e.target.value) }
+            />
+          </div>
+          
+          <div>
+            <label>numWaves</label>
+            <input
+              type="text"
+              value={ numWaves }
+              onChange={ e => this.handleChange('numWaves', e.target.value) }
+            />
+          </div>
+          
+          <div>
+            <label>numBackgroundWaves</label>
+            <input
+              type="text"
+              value={ numBackgroundWaves }
+              onChange={ e => this.handleChange('numBackgroundWaves', e.target.value) }
+            />
+          </div>
+          
+          <div>
+            <label>backgroundWaveMaxHeight</label>
+            <input
+              type="text"
+              value={ backgroundWaveMaxHeight }
+              onChange={ e => this.handleChange('backgroundWaveMaxHeight', e.target.value) }
+            />
+          </div>
+          
+          <div>
+            <label>backgroundWaveCompression</label>
+            <input
+              type="text"
+              value={ backgroundWaveCompression }
+              onChange={ e => this.handleChange('backgroundWaveCompression', e.target.value) }
+            />
+          </div>
+          
+          <div>
+            <label>waveCharacters</label>
+            <input
+              type="text"
+              value={ waveCharacters }
+              onChange={ e => this.handleChange('waveCharacters', e.target.value) }
+            />
+          </div>
+          
+          <div>
+            <label>frontWaveHex</label>
+            <input
+              type="text"
+              value={ frontWaveHex }
+              onChange={ e => this.handleChange('frontWaveHex', e.target.value) }
+            />
+          </div>
+          
+          <div>
+            <label>backWaveHex</label>
+            <input
+              type="text"
+              value={ backWaveHex }
+              onChange={ e => this.handleChange('backWaveHex', e.target.value) }
+            />
+          </div>
+          
+        </div>
+        <div
+          style={{
+            height: '100vh',
+            width: '100vw',
+          }}
+          id="canvas"
+        >
+          { grid }
+        </div>
       </div>
     );
   }
